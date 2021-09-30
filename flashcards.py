@@ -1,9 +1,7 @@
 # Write your code here
-from random import choice
-
 class FlashCards:
     def __init__(self):
-        self.cards = []
+        self.cards = {}
 
     def start(self):
         self.build_deck()
@@ -15,19 +13,35 @@ class FlashCards:
 
         for i in range(1, n + 1):
             print(f"The term for card #{i}:")
-            term = input()
+            while True:
+                term = input()
+                if term in self.cards:
+                    print(f'The term "{term}" already exists. Try again:')
+                else:
+                    break
+
             print(f"The definition for card #{i}:")
-            definition = input()
-            self.cards.append({'term': term, 'definition': definition})
+            while True:
+                definition = input()
+                if definition in self.cards.values():
+                    print(f'The definition "{definition}" already exists. Try again:')
+                else:
+                    break
+            self.cards[term] = definition
 
     def test_user(self):
-        for card in self.cards:
-            print(f'Print the definition of "{card["term"]}":')
+        for term, definition in self.cards.items():
+            print(f'Print the definition of "{term}":')
             answer = input()
-            if answer == card["definition"]:
+            if answer == definition:
                 print('Correct!')
             else:
-                print(f'Wrong. The right answer is "{card["definition"]}"')
+                for _t, _d in self.cards.items():
+                    if answer == _d:
+                        print(f'Wrong. The right answer is "{definition}", but your definition is correct for "{_t}".')
+                        break
+                else:
+                    print(f'Wrong. The right answer is "{definition}"')
 
 
 FlashCards().start()
