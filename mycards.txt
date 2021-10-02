@@ -1,1 +1,1 @@
-{'Mexico': 'CDMX', 'France': 'Paris', 'England': 'London', 'Spain': 'Madrid', 'China': 'Beijing'}
+{'Mexico': {'definition': 'CDMX', 'mistakes': 0}, 'Canada': {'definition': 'Ottawa', 'mistakes': 0}, 'USA': {'definition': 'DC', 'mistakes': 0}}

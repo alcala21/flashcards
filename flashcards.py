@@ -11,11 +11,21 @@ class FlashCards:
         self.cards = {}
         self.card = None
         self.definition = None
+        self.log = []
+
+    def print(self, message="", end='\n'):
+        self.log.append(message + end)
+        print(message, end=end)
+
+    def input(self):
+        term = input()
+        self.log.append(term + '\n')
+        return term
 
     def start(self):
         while True:
-            print("Input the action (add, remove, import, export, ask, exit):")
-            action = input()
+            self.print("Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):")
+            action = self.input()
             if action == "add":
                 self.add()
             elif action == "remove":
@@ -26,97 +36,148 @@ class FlashCards:
                 self.export()
             elif action == "ask":
                 self.ask()
+            elif action == "log":
+                self.loginfo()
+            elif action == "hardest card":
+                self.hardestcard()
+            elif action == "reset stats":
+                self.resetstats()
             elif action == "exit":
                 self.exit()
                 break
 
     def add(self):
-        print("The card:")
+        self.print("The card:")
         while True:
             try:
-                self.card = input()
+                self.card = self.input()
                 if self.card in self.cards:
                     raise CardExistsException
                 else:
                     break
             except CardExistsException:
-                print(f'The term "{self.card}" already exists. Try again:')
-        print("The definition of the card:")
+                self.print(f'The term "{self.card}" already exists. Try again:')
+        self.print("The definition of the card:")
         while True:
             try:
-                self.definition = input()
-                if self.definition in self.cards.values():
+                self.definition = self.input()
+                if self.definition in [x['definition'] for x in self.cards.values()]:
                     raise CardExistsException(self.definition)
                 else:
                     break
             except CardExistsException:
-                print(f'The definition "{self.definition}" already exists. Try again:')
+                self.print(f'The definition "{self.definition}" already exists. Try again:')
 
-        self.cards[self.card] = self.definition
-        print(f'The pair ("{self.card}":"{self.definition}") has been added.', end="\n\n")
+        self.cards[self.card] = {'definition': self.definition, 'mistakes': 0}
+        self.print(f'The pair ("{self.card}":"{self.definition}") has been added.', end="\n\n")
 
     def remove(self):
-        print("Which card?")
-        card = input()
+        self.print("Which card?")
+        card = self.input()
         if card in self.cards:
             del self.cards[card]
-            print('The card has been removed', end='\n\n')
+            self.print('The card has been removed', end='\n\n')
         else:
-            print(f'Can\'t remove "{card}": there is no such card.', end='\n\n')
+            self.print(f'Can\'t remove "{card}": there is no such card.', end='\n\n')
 
     def importing(self):
-        print('File name:')
-        filename = input()
+        self.print('File name:')
+        filename = self.input()
         files = os.listdir()
         if filename not in files:
-            print('File not found.', end='\n\n')
+            self.print('File not found.', end='\n\n')
             return
         with open(filename) as f:
             temp_dict = eval(f.read())
         self.cards.update(temp_dict)
-        print(f'{len(temp_dict)} cards have been loaded.', end='\n\n')
+        self.print(f'{len(temp_dict)} cards have been loaded.', end='\n\n')
 
     def export(self):
-        print("File name:")
-        filename = input()
+        self.print("File name:")
+        filename = self.input()
         with open(filename, 'w') as f:
             print(self.cards, file=f)
-        print(f'{len(self.cards)} cards have been saved.', end='\n\n')
+        self.print(f'{len(self.cards)} cards have been saved.', end='\n\n')
 
     def ask(self):
-        print("How many times to ask?")
+        if not self.cards:
+            self.print()
+            return
+
+        self.print("How many times to ask?")
         while True:
             try:
-                n = int(input())
+                n = int(self.input())
                 break
             except ValueError:
-                print("Enter an integer value.")
+                self.print("Enter an integer value.")
         i = 0
         while True:
             full = False
-            for card, definition in self.cards.items():
-                print(f'Print the definition of "{card}":')
-                answer = input()
-                if answer == definition:
-                    print("Correct!")
+            for card, info in self.cards.items():
+                self.print(f'Print the definition of "{card}":')
+                answer = self.input()
+                if answer == info["definition"]:
+                    self.print("Correct!")
                 else:
+                    self.cards[card]['mistakes'] += 1
                     for _t, _d in self.cards.items():
-                        if answer == _d:
-                            print(f'Wrong. The right answer is "{definition}", but your definition is correct for "{_t}".')
+                        if answer == _d['definition']:
+                            self.print(f'Wrong. The right answer is "{info["definition"]}", but your definition is correct for "{_t}".')
                             break
                     else:
-                        print(f'Wrong. The right answer is "{definition}"')
+                        self.print(f'Wrong. The right answer is "{info["definition"]}"')
                 i += 1
                 if i == n:
                     full = True
                     break
             if full:
                 break
-        print()
+        self.print()
 
-    @staticmethod
-    def exit():
-        print("Bye bye!")
+    def exit(self):
+        self.print("Bye bye!")
+
+    def loginfo(self):
+        self.print("File name:")
+        filename = self.input()
+        with open(filename, 'w') as f:
+            f.writelines(self.log)
+        self.print('The log has been saved.', end='\n\n')
+
+    def hardestcard(self):
+        if not self.cards:
+            self.print("There are no cards with errors.", end="\n\n")
+            return
+
+        maxval = max(self.cards[x]['mistakes'] for x in self.cards)
+
+        if maxval == 0:
+            self.print("There are no cards with errors.", end="\n\n")
+            return
+
+        hardcards = [x for x in self.cards if self.cards[x]['mistakes'] == maxval]
+        str_cards = ", ".join(f'"{x}"' for x in hardcards)
+        if len(hardcards) == 1:
+            verb, pronoun = 'is', 'it'
+        else:
+            verb, pronoun = 'are', 'them'
+
+        if maxval == 1:
+            str_err = 'error'
+        else:
+            str_err = 'errors'
+
+        self.print(f'The hardest card {verb} {str_cards}. You have {maxval} {str_err} answering {pronoun}.', end='\n\n')
+
+    def resetstats(self):
+        if not self.cards:
+            return
+
+        for card in self.cards:
+            self.cards[card]["mistakes"] = 0
+
+        self.print("Card statistics have been reset.", end='\n\n')
 
 
 FlashCards().start()
