@@ -1,5 +1,6 @@
 # Write your code here
 import os
+import argparse
 
 
 class CardExistsException(Exception):
@@ -7,11 +8,13 @@ class CardExistsException(Exception):
 
 
 class FlashCards:
-    def __init__(self):
+    def __init__(self, import_from, export_to):
         self.cards = {}
         self.card = None
         self.definition = None
         self.log = []
+        self.import_from =import_from
+        self.export_to =export_to
 
     def print(self, message="", end='\n'):
         self.log.append(message + end)
@@ -23,6 +26,9 @@ class FlashCards:
         return term
 
     def start(self):
+        if self.import_from:
+            self.load_file(self.import_from)
+
         while True:
             self.print("Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):")
             action = self.input()
@@ -83,6 +89,9 @@ class FlashCards:
     def importing(self):
         self.print('File name:')
         filename = self.input()
+        self.load_file(filename)
+
+    def load_file(self, filename):
         files = os.listdir()
         if filename not in files:
             self.print('File not found.', end='\n\n')
@@ -95,6 +104,9 @@ class FlashCards:
     def export(self):
         self.print("File name:")
         filename = self.input()
+        self.save_file(filename)
+
+    def save_file(self, filename):
         with open(filename, 'w') as f:
             print(self.cards, file=f)
         self.print(f'{len(self.cards)} cards have been saved.', end='\n\n')
@@ -136,6 +148,8 @@ class FlashCards:
         self.print()
 
     def exit(self):
+        if self.export_to:
+            self.save_file(self.export_to)
         self.print("Bye bye!")
 
     def loginfo(self):
@@ -180,4 +194,10 @@ class FlashCards:
         self.print("Card statistics have been reset.", end='\n\n')
 
 
-FlashCards().start()
+parser = argparse.ArgumentParser(description="This program manages flashcards.")
+
+parser.add_argument('--import_from', default="")
+parser.add_argument('--export_to', default="")
+
+args = parser.parse_args()
+FlashCards(args.import_from, args.export_to).start()

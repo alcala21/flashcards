@@ -1,0 +1,1 @@
+{'Mexico': {'definition': 'CDMX', 'mistakes': 0}, 'Canada': {'definition': 'Ottawa', 'mistakes': 0}, 'USA': {'definition': 'DC', 'mistakes': 0}, 'Japan': {'definition': 'Tokyo', 'mistakes': 0}}
